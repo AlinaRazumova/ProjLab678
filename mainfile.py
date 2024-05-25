@@ -1,13 +1,14 @@
 import argparse
 import json
 import yaml
+import xml.etree.ElementTree as ET
 import os
 import sys
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Load and save JSON or YAML files.")
-    parser.add_argument("input_file", help="Path to the input JSON or YAML file.")
-    parser.add_argument("output_file", help="Path to the output JSON or YAML file.")
+    parser = argparse.ArgumentParser(description="Load and save JSON, YAML, or XML files.")
+    parser.add_argument("input_file", help="Path to the input JSON, YAML, or XML file.")
+    parser.add_argument("output_file", help="Path to the output JSON, YAML, or XML file.")
     return parser.parse_args()
 
 def loading_file(input_file):
@@ -22,6 +23,9 @@ def loading_file(input_file):
                 return json.load(file)
             elif file_extension == ".yml" or file_extension == ".yaml":
                 return yaml.safe_load(file)
+            elif file_extension == ".xml":
+                tree = ET.parse(file)
+                return tree.getroot()
             else:
                 print(f"Error: Unsupported file format {file_extension}.", file=sys.stderr)
                 sys.exit(1)
@@ -30,6 +34,9 @@ def loading_file(input_file):
         sys.exit(1)
     except yaml.YAMLError as e:
         print(f"Error: The file {input_file} contains invalid YAML. {e}", file=sys.stderr)
+        sys.exit(1)
+    except ET.ParseError as e:
+        print(f"Error: The file {input_file} contains invalid XML. {e}", file=sys.stderr)
         sys.exit(1)
 
 def save_file(output_file, data):
@@ -40,6 +47,9 @@ def save_file(output_file, data):
                 json.dump(data, file, indent=4)
             elif file_extension == ".yml" or file_extension == ".yaml":
                 yaml.dump(data, file, default_flow_style=False)
+            elif file_extension == ".xml":
+                tree = ET.ElementTree(data)
+                tree.write(file, encoding="unicode", xml_declaration=True)
             else:
                 print(f"Error: Unsupported file format {file_extension}.", file=sys.stderr)
                 sys.exit(1)
@@ -60,6 +70,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
