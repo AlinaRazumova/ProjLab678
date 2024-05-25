@@ -39,6 +39,27 @@ def loading_file(input_file):
         print(f"Error: The file {input_file} contains invalid XML. {e}", file=sys.stderr)
         sys.exit(1)
 
+def dict_to_xml(tag, d):
+    """Turn a simple dict of key/value pairs into XML"""
+    elem = ET.Element(tag)
+    for key, val in d.items():
+        child = ET.Element(key)
+        child.text = str(val)
+        elem.append(child)
+    return elem
+
+def convert_data_to_xml(data, root_tag="root"):
+    """Convert a dictionary or list to an XML ElementTree Element"""
+    if isinstance(data, dict):
+        return dict_to_xml(root_tag, data)
+    elif isinstance(data, list):
+        root = ET.Element(root_tag)
+        for item in data:
+            root.append(dict_to_xml("item", item))
+        return root
+    else:
+        raise TypeError("Unsupported data type for XML conversion")
+
 def save_file(output_file, data):
     file_extension = os.path.splitext(output_file)[1].lower()
     try:
@@ -48,13 +69,20 @@ def save_file(output_file, data):
             elif file_extension == ".yml" or file_extension == ".yaml":
                 yaml.dump(data, file, default_flow_style=False)
             elif file_extension == ".xml":
-                tree = ET.ElementTree(data)
+                if isinstance(data, (dict, list)):
+                    root = convert_data_to_xml(data)
+                else:
+                    root = data
+                tree = ET.ElementTree(root)
                 tree.write(file, encoding="unicode", xml_declaration=True)
             else:
                 print(f"Error: Unsupported file format {file_extension}.", file=sys.stderr)
                 sys.exit(1)
     except IOError as e:
         print(f"Error: Unable to write to file {output_file}. {e}", file=sys.stderr)
+        sys.exit(1)
+    except TypeError as e:
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 def main():
@@ -70,6 +98,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
