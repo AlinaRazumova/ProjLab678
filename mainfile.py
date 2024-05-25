@@ -52,10 +52,14 @@ def main():
     input_file = args.input_file
     output_file = args.output_file
 
+    # Load data from input file
     obj = loading_file(input_file)
+
+    # Save data to output file
     save_file(output_file, obj)
 
 if __name__ == "__main__":
     main()
+
 
 
